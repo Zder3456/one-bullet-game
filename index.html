@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ONE BULLET</title>
+<meta name="description" content="One bullet, endless waves. Aim, shoot, pick the round back up.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2305070d'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%236ee7ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ffd166'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --ink: #05070d;
+    --line: rgba(110, 231, 255, 0.16);
+    --cyan: #6ee7ff;
+    --amber: #ffd166;
+    --text: #dbe6ff;
+    --dim: #8ea6c8;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font: 16px/1.5 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(1100px 600px at 12% -10%, rgba(64, 120, 220, 0.20), transparent 70%),
+      radial-gradient(900px 600px at 92% 0%, rgba(148, 86, 220, 0.16), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(110, 231, 255, 0.03) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(90deg, rgba(110, 231, 255, 0.03) 0 1px, transparent 1px 64px);
+    background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
+  header { padding: 72px 0 26px; text-align: center; }
+  h1 {
+    margin: 0 0 12px;
+    font-size: clamp(40px, 7vw, 78px);
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    font-weight: 800;
+    background: linear-gradient(100deg, #eaf7ff 0%, #9fe8ff 55%, #6ee7ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  p.lede { margin: 0 auto 26px; max-width: 520px; color: var(--dim); font-size: 17px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  button, .link {
+    display: inline-flex; align-items: center; gap: 8px; justify-content: center;
+    padding: 12px 24px; border-radius: 10px; border: 1px solid transparent;
+    font: 700 15px/1 "Segoe UI", system-ui, sans-serif; letter-spacing: 0.02em;
+    cursor: pointer; text-decoration: none; transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  button { background: var(--amber); color: #23190a; }
+  button:hover { background: #ffe08c; transform: translateY(-1px); }
+  .link { border-color: rgba(110, 231, 255, 0.35); color: var(--text); }
+  .link:hover { border-color: var(--cyan); background: rgba(110, 231, 255, 0.07); }
+  button:focus-visible, .link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+  main { flex: 1; display: flex; align-items: center; padding: 10px 0 46px; }
+  .stage {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #04060c;
+    box-shadow: 0 0 0 1px rgba(4, 6, 12, 0.8), 0 26px 80px -34px rgba(110, 231, 255, 0.5);
+    overflow: hidden;
+  }
+  .stage iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; }
+  .stage:fullscreen {
+    border: 0; border-radius: 0; width: 100vw; height: 100vh; background: #04060c;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage:fullscreen iframe { width: 100%; height: 100%; aspect-ratio: auto; }
+  .stage:fullscreen .hint { display: none; }
+  .stage.theater {
+    position: fixed; inset: 0; z-index: 9999;
+    width: 100vw; height: 100vh; border: 0; border-radius: 0; background: #04060c;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage.theater iframe { width: 100%; height: 100%; aspect-ratio: auto; }
+  .stage.theater .hint { display: none; }
+  body.theater-on { overflow: hidden; }
+  .stage .exit {
+    display: none; position: absolute; top: 12px; right: 12px; z-index: 2;
+    padding: 9px 16px; font-size: 13px; border-radius: 8px;
+    background: rgba(6, 10, 20, 0.82); color: var(--text);
+    border: 1px solid rgba(110, 231, 255, 0.35);
+  }
+  .stage .exit:hover { background: rgba(110, 231, 255, 0.14); }
+  .stage:fullscreen .exit, .stage.theater .exit { display: inline-flex; }
+  .hint {
+    position: absolute; left: 14px; bottom: 12px; pointer-events: none;
+    font-size: 12px; color: rgba(219, 230, 255, 0.55); letter-spacing: 0.04em;
+  }
+  footer { padding: 0 0 26px; text-align: center; font-size: 12px; color: rgba(159, 182, 216, 0.45); }
+  @media (prefers-reduced-motion: reduce) {
+    button:hover { transform: none; }
+    button, .link { transition: none; }
+  }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <h1>ONE BULLET</h1>
+  <p class="lede">One bullet, endless waves. Aim, shoot, pick the round back up — or blow it up.</p>
+  <div class="bar">
+    <button id="fs" type="button">Fullscreen</button>
+    <a class="link" href="game/index.html" target="_blank" rel="noopener">Open in a new tab</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="stage" id="stage">
+      <iframe id="game" src="game/index.html" title="ONE BULLET game" allow="autoplay; fullscreen"></iframe>
+      <button class="exit" id="exit" type="button">Exit fullscreen</button>
+      <span class="hint">WASD · LMB / Space · 1 Pull · 2 Blast</span>
+    </div>
+  </div>
+</main>
+
+<footer>WASD to move · LMB / Space to shoot</footer>
+
+<script>
+  (function () {
+    var stage = document.getElementById('stage');
+    var btn = document.getElementById('fs');
+
+    function setLabel() {
+      var on = !!document.fullscreenElement || stage.classList.contains('theater');
+      btn.textContent = on ? 'Exit fullscreen' : 'Fullscreen';
+    }
+
+    function theaterOn() {
+      stage.classList.add('theater');
+      document.body.classList.add('theater-on');
+      setLabel();
+    }
+
+    function theaterOff() {
+      stage.classList.remove('theater');
+      document.body.classList.remove('theater-on');
+      setLabel();
+    }
+
+    btn.addEventListener('click', function () {
+      var req = stage.requestFullscreen || stage.webkitRequestFullscreen;
+      var exit = document.exitFullscreen || document.webkitExitFullscreen;
+
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (exit) exit.call(document);
+        return;
+      }
+      if (stage.classList.contains('theater')) {
+        theaterOff();
+        return;
+      }
+      if (!req) {
+        theaterOn();
+        return;
+      }
+      var settled = false;
+      var p = req.call(stage);
+      if (p && p.then) {
+        p.then(function () { settled = true; setLabel(); })
+          .catch(function () { settled = true; theaterOn(); });
+      }
+      setTimeout(function () {
+        if (!settled && !document.fullscreenElement) theaterOn();
+      }, 700);
+    });
+
+    document.addEventListener('fullscreenchange', setLabel);
+    document.addEventListener('webkitfullscreenchange', setLabel);
+
+    document.getElementById('exit').addEventListener('click', function () {
+      var exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (exit) exit.call(document);
+        return;
+      }
+      theaterOff();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && stage.classList.contains('theater')) theaterOff();
+    });
+  })();
+</script>
+</body>
+</html>
